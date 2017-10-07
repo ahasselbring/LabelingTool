@@ -1,0 +1,8 @@
+<RCC>
+  <qresource>
+    <file>Icons/ball.png</file>
+    <file>Icons/line.png</file>
+    <file>Icons/goalPost.png</file>
+    <file>Icons/robot.png</file>
+  </qresource>
+</RCC>
