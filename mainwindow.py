@@ -76,7 +76,6 @@ class MainWindow(QMainWindow):
         self.__fileExitAction.triggered.connect(self.close)
 
         self.__imageDatabase.preImageDatabaseChanged.connect(self.__imageDatabaseWidget.preChangeImageDatabase)
-        self.__imageDatabase.preImageDatabaseChanged.connect(self.__labelWidget.preChangeImageDatabase)
         self.__imageDatabase.imageDatabaseChanged.connect(self.__imageDatabaseWidget.changeImageDatabase)
         self.__imageDatabase.imageDatabaseChanged.connect(self.__imageWidget.changeImageDatabase)
         self.__imageDatabase.imageDatabaseChanged.connect(self.__labelWidget.changeImageDatabase)
@@ -85,6 +84,7 @@ class MainWindow(QMainWindow):
         self.__imageDatabase.preImageRemoved.connect(self.__imageDatabaseWidget.preRemoveImage)
         self.__imageDatabase.imageRemoved.connect(self.__imageDatabaseWidget.removeImage)
         self.__imageDatabase.imageRemoved.connect(self.__imageWidget.removeImage)
+        self.__imageDatabase.imageRemoved.connect(self.__labelWidget.removeImage)
         self.__imageDatabase.labelAdded.connect(self.__imageWidget.addLabel)
         # self.__imageDatabase.labelAdded.connect(self.__labelWidget.addLabel)
         self.__imageDatabase.labelChanged.connect(self.__imageWidget.changeLabel)
@@ -97,6 +97,8 @@ class MainWindow(QMainWindow):
         self.__imageDatabaseWidget.removeImageClicked.connect(self.__imageDatabase.removeImage)
         self.__imageWidget.mousePressed.connect(self.__labelWidget.addPoint)
         self.__labelWidget.labelCreated.connect(self.__imageDatabase.addLabel)
+        self.__labelWidget.labelEdited.connect(self.__imageDatabase.changeLabel)
+        self.__labelWidget.labelDeleted.connect(self.__imageDatabase.removeLabel)
 
         """
         self.statusBar().clearMessage()

@@ -4,5 +4,6 @@
     <file>Icons/line.png</file>
     <file>Icons/goalPost.png</file>
     <file>Icons/robot.png</file>
+    <file>Icons/penaltySpot.png</file>
   </qresource>
 </RCC>

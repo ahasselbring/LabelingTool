@@ -28,6 +28,8 @@ class ImageDatabaseModel(QAbstractItemModel):
 
 class LabelWidget(QDockWidget):
     labelCreated = pyqtSignal(LabeledImage, LabelBase)
+    labelEdited = pyqtSignal(LabeledImage, LabelBase)
+    labelDeleted = pyqtSignal(LabeledImage, LabelBase)
 
     def __init__(self, imageDatabase, parent=None):
         super().__init__(parent)
@@ -50,13 +52,18 @@ class LabelWidget(QDockWidget):
 
         self.setWidget(self.__treeView)
 
-    def preChangeImageDatabase(self):
-        self.__selectedImage = None
-        self.__treeModel.beginResetModel()
-
     def changeImageDatabase(self):
+        self.__treeModel.beginResetModel()
+        self.__selectedImage = None
         self.__treeModel.endResetModel()
         self.__treeView.setContextMenuPolicy(Qt.CustomContextMenu if self.__imageDatabase.exists() else Qt.NoContextMenu)
+
+    def removeImage(self, image):
+        if image != self.__selectedImage:
+            return
+        self.__treeModel.beginResetModel()
+        self.__selectedImage = None
+        self.__treeModel.endResetModel()
 
     def selectImage(self, image):
         if image == self.__selectedImage:
@@ -66,7 +73,7 @@ class LabelWidget(QDockWidget):
         self.__treeModel.endResetModel()
 
     def addPoint(self, point):
-        if not self.__selectedImage:
+        if not self.__selectedImage or not self.__currentCls:
             return
         self.__currentPoints.append(point)
         if len(self.__currentPoints) == self.__currentCls.requiredNumberOfClicks():

@@ -164,7 +164,7 @@ class PenaltySpotLabel(LabelBase):
 
     @staticmethod
     def icon():
-        return QIcon()
+        return QIcon(':/Icons/penaltySpot.png')
 
     @staticmethod
     def requiredNumberOfClicks():
