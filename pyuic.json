@@ -1,0 +1,7 @@
+{
+    "files": [
+        ["resources/resources.qrc", "labeling_tool"]
+    ],
+    "pyrcc": "pyrcc5",
+    "pyrcc_options": ""
+}

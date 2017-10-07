@@ -1,13 +1,13 @@
-from PyQt5.QtCore import pyqtSignal, QFileInfo, QSettings, Qt
+from PyQt5.QtCore import QFileInfo, QSettings, Qt
 from PyQt5.QtGui import QKeySequence
-from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QMainWindow, QMenu, QMessageBox
+from PyQt5.QtWidgets import QAction, QApplication, QFileDialog, QMainWindow, QMessageBox
+from labeling_tool.imagedatabase import ImageDatabase, LabeledImage, LabelBase
+from labeling_tool.imagedatabasewidget import ImageDatabaseWidget
+from labeling_tool.labels import *
+from labeling_tool.labelwidget import LabelWidget
 
-from imagedatabase import ImageDatabase, LabeledImage, LabelBase
-from labels import *
+from labeling_tool.imagewidget import ImageWidget
 
-from imagedatabasewidget import ImageDatabaseWidget
-from imagewidget import ImageWidget
-from labelwidget import LabelWidget
 
 class MainWindow(QMainWindow):
     def __init__(self):

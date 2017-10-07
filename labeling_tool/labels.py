@@ -1,12 +1,13 @@
-from enum import Enum
 import math
+from enum import Enum
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QPen
 
-import resources
+import labeling_tool.resources_rc
 
-from imagedatabase import LabelBase
+from labeling_tool.imagedatabase import LabelBase
+
 
 class BallLabel(LabelBase):
     def __init__(self, center, radius, blurred=False):
