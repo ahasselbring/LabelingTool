@@ -124,6 +124,6 @@ class ImageDatabase(QObject):
             return
 
         self.preLabelRemoved.emit(labeledImage, label)
-        self.labeledImages[index].labels[type(label)].remove(label)
+        labeledImage.labels[type(label)].remove(label)
         self.__modified = True
         self.labelRemoved.emit(labeledImage, label)
