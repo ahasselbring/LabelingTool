@@ -1,7 +1,8 @@
 from PyQt5.QtCore import pyqtSignal, QAbstractListModel, QModelIndex, Qt, QVariant
 from PyQt5.QtWidgets import QAction, QDockWidget, QMenu, QListView
 
-from imagedatabase import ImageDatabase, LabeledImage
+from labeling_tool.imagedatabase import LabeledImage
+
 
 class ImageDatabaseModel(QAbstractListModel):
     def __init__(self, imageDatabase, parent=None):
