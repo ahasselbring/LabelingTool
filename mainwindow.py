@@ -54,13 +54,16 @@ class MainWindow(QMainWindow):
 
         self.__fileMenu = self.menuBar().addMenu('&File')
 
+        self.__labelMenu = self.menuBar().addMenu('&Labels')
+        for cls in sorted(LabelBase.__subclasses__(), key=lambda _: _.name().lower()):
+            act = self.__labelMenu.addAction(cls.icon(), cls.name())
+            act.triggered.connect(lambda checked, cls=cls: self.__imageWidget.showLabelType(cls) if checked else self.__imageWidget.hideLabelType(cls))
+            act.setCheckable(True)
+            act.setChecked(True)
+
         self.__viewMenu = self.menuBar().addMenu('&View')
         self.__viewMenu.addAction(self.__imageDatabaseWidget.toggleViewAction())
         self.__viewMenu.addAction(self.__labelWidget.toggleViewAction())
-        for cls in LabelBase.__subclasses__(): # TODO: sort for deterministic order
-            act = self.__viewMenu.addAction(cls.icon(), cls.name())
-            act.triggered.connect(lambda checked, cls=cls: self.__imageWidget.hideLabelType(cls) if checked else self.__imageWidget.showLabelType(cls))
-            act.setCheckable(True)
 
         self.__helpMenu = self.menuBar().addMenu('&Help')
         aboutAction = self.__helpMenu.addAction('&About')
