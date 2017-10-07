@@ -13,10 +13,10 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.__imageDatabase = ImageDatabase()
+        self.__imageDatabase = ImageDatabase(self)
         self.__filePath = ''
 
-        self.__settings = QSettings('HULKs', 'ImageLab')
+        self.__settings = QSettings('HULKs', 'ImageLab', self)
         self.__recentFiles = self.__settings.value('RecentFiles', [])
         if not self.__recentFiles:
             self.__recentFiles = []

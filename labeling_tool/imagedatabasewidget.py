@@ -30,14 +30,14 @@ class ImageDatabaseWidget(QDockWidget):
         self.setAllowedAreas(Qt.LeftDockWidgetArea)
         self.setWindowTitle('Image Database')
 
-        self.__listView = QListView()
+        self.__listView = QListView(self)
         self.__listView.customContextMenuRequested.connect(self.__prepareMenu)
         self.__listView.activated.connect(lambda index: self.selectImageClicked.emit(self.__imageDatabase.labeledImages[index.row()]))
         self.__listView.setAlternatingRowColors(True)
         self.__listView.setContextMenuPolicy(Qt.NoContextMenu)
 
         self.__imageDatabase = imageDatabase
-        self.__listModel = ImageDatabaseModel(imageDatabase)
+        self.__listModel = ImageDatabaseModel(imageDatabase, self)
         self.__listView.setModel(self.__listModel)
 
         self.setWidget(self.__listView)
@@ -64,7 +64,7 @@ class ImageDatabaseWidget(QDockWidget):
         self.__listModel.endRemoveRows()
 
     def __prepareMenu(self, pos):
-        menu = QMenu()
+        menu = QMenu(self)
 
         addFileAction = QAction('Add Image', self)
         addFileAction.triggered.connect(lambda: self.addImageClicked.emit())
