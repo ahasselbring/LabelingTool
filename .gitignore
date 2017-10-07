@@ -1,5 +1,4 @@
 *.swp
-/__pycache__
-.idea
-/labeling_tool/resources_rc.py
 __pycache__
+/.idea
+/labeling_tool/resources_rc.py
