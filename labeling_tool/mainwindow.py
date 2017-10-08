@@ -36,6 +36,9 @@ class MainWindow(QMainWindow):
         self.__fileSaveAsAction.setEnabled(False)
         self.__fileSaveAsAction.setShortcuts(QKeySequence.SaveAs)
 
+        self.__fileExportAction = QAction('&Export...', self)
+        self.__fileExportAction.setEnabled(False)
+
         self.__fileCloseAction = QAction('&Close', self)
         self.__fileCloseAction.setEnabled(False)
         self.__fileCloseAction.setShortcuts(QKeySequence.Close)
@@ -73,6 +76,7 @@ class MainWindow(QMainWindow):
         self.__fileOpenAction.triggered.connect(self.open)
         self.__fileSaveAction.triggered.connect(self.save)
         self.__fileSaveAsAction.triggered.connect(lambda: self.save(saveAs=True))
+        self.__fileExportAction.triggered.connect(self.export)
         self.__fileExitAction.triggered.connect(self.close)
 
         self.__imageDatabase.preImageDatabaseChanged.connect(self.__imageDatabaseWidget.preChangeImageDatabase)
@@ -127,6 +131,7 @@ class MainWindow(QMainWindow):
 
         self.__fileSaveAction.setEnabled(True)
         self.__fileSaveAsAction.setEnabled(True)
+        self.__fileExportAction.setEnabled(True)
         self.__fileCloseAction.setEnabled(True)
 
     def open(self):
@@ -153,6 +158,20 @@ class MainWindow(QMainWindow):
 
         self.saveFile(self.__filePath)
 
+    def export(self):
+        if not self.__imageDatabase.exists():
+            return
+
+        exportName, _ = QFileDialog.getSaveFileName(self, 'Export Database', self.__settings.value('ExportDirectory', ''))
+        if exportName == '':
+            return
+
+        fileInfo = QFileInfo(exportName)
+        self.__settings.setValue('ExportDirectory', fileInfo.dir().path())
+        exportPath = fileInfo.absoluteDir().canonicalPath() + '/' + fileInfo.fileName()
+
+        self.__imageDatabase.exportToJson(exportPath)
+
     def openFile(self, fileName):
         if not self.closeFile():
             return
@@ -176,6 +195,7 @@ class MainWindow(QMainWindow):
 
         self.__fileSaveAction.setEnabled(True)
         self.__fileSaveAsAction.setEnabled(True)
+        self.__fileExportAction.setEnabled(True)
         self.__fileCloseAction.setEnabled(True)
 
     def saveFile(self, fileName):
@@ -192,7 +212,6 @@ class MainWindow(QMainWindow):
         self.__imageDatabase.writeToFile(filePath)
         self.__filePath = filePath
 
-
     def closeFile(self):
         if self.__imageDatabase.modified():
             reply = QMessageBox.question(self, 'Unsaved changes', 'Your database has unsaved changes. Do you want to save it?', QMessageBox.Yes | QMessageBox.No | QMessageBox.Abort, QMessageBox.Abort)
@@ -205,6 +224,7 @@ class MainWindow(QMainWindow):
 
         self.__fileSaveAction.setEnabled(False)
         self.__fileSaveAsAction.setEnabled(False)
+        self.__fileExportAction.setEnabled(False)
         self.__fileCloseAction.setEnabled(False)
 
         self.__imageDatabase.clear()
@@ -218,6 +238,7 @@ class MainWindow(QMainWindow):
         self.__fileMenu.addSeparator()
         self.__fileMenu.addAction(self.__fileSaveAction)
         self.__fileMenu.addAction(self.__fileSaveAsAction)
+        self.__fileMenu.addAction(self.__fileExportAction)
 
         if self.__recentFiles:
             self.__fileMenu.addSeparator()

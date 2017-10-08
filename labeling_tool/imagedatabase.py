@@ -1,5 +1,6 @@
 from PyQt5.QtCore import pyqtSignal, QObject
 import pickle
+import json
 
 class LabeledImage:
     def __init__(self, imageFile = ''):
@@ -13,6 +14,16 @@ class LabelBase:
     @staticmethod
     def requiredNumberOfClicks():
         raise NotImplementedError
+
+def encodeImageDatabase(obj):
+    def translateName(name):
+        components = name.split()
+        return components[0].title() + ''.join(_.title() for _ in components[1:])
+    if isinstance(obj, LabeledImage):
+        return dict({ 'fileName':  obj.imageFile }, **{ translateName(cls.name()): labels for cls, labels in obj.labels.items() })
+    elif isinstance(obj, LabelBase):
+        return obj.__dict__
+    raise TypeError('Cannot serialize ', repr(obj))
 
 class ImageDatabase(QObject):
     preImageDatabaseChanged = pyqtSignal()
@@ -68,6 +79,12 @@ class ImageDatabase(QObject):
         with open(fileName, 'wb') as f:
             pickle.dump(self.labeledImages, f)
         self.__modified = False
+
+    def exportToJson(self, fileName):
+        if not self.__exists:
+            return
+        with open(fileName, 'w') as f:
+            json.dump({'imageDatabase': self.labeledImages}, f, default=encodeImageDatabase)
 
     def addImage(self, labeledImage):
         if not self.__exists:
