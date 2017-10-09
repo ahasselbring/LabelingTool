@@ -1,15 +1,15 @@
 from ast import literal_eval
 from enum import Enum
 from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt, QVariant
-from PyQt5.QtWidgets import QAction, QComboBox, QDockWidget, QLineEdit, QMenu, QStyledItemDelegate, QTabBar, QTreeView, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QAction, QComboBox, QDockWidget, QLineEdit, QMenu, QSpinBox, QStyledItemDelegate, QTabBar, QTreeView, QVBoxLayout, QWidget
 import weakref
 from labeling_tool.labels import *
 
 from labeling_tool.imagedatabase import LabelBase, LabeledImage
 
 class LabelProperty:
-    def __init__(self, name, obj=None, parent=None):
-        self.__name = name
+    def __init__(self, row, obj, parent):
+        self.__name = list(vars(parent).keys())[row]
         if obj is not None:
             self.__ref = weakref.ref(obj)
         self.__parent = parent
@@ -35,6 +35,8 @@ class LabelDelegate(QStyledItemDelegate):
         var = type(item.property())
         if issubclass(var, Enum):
             return QComboBox(parent)
+        elif var is int:
+            return QSpinBox(parent)
         else:
             return QLineEdit(parent)
 
@@ -45,6 +47,8 @@ class LabelDelegate(QStyledItemDelegate):
         if issubclass(var, Enum):
             editor.addItems(var.__members__.keys())
             editor.setCurrentIndex(item.property().value)
+        elif var is int:
+            editor.setValue(item.property())
         else:
             editor.setText(str(index.internalPointer().property()))
         self.blockSignals(False)
@@ -54,6 +58,8 @@ class LabelDelegate(QStyledItemDelegate):
         var = type(item.property())
         if issubclass(var, Enum):
             model.setData(index, var[editor.currentText()], Qt.EditRole)
+        elif var is int:
+            model.setData(index, editor.value(), Qt.EditRole)
         else:
             model.setData(index, literal_eval(editor.text()), Qt.EditRole)
 
@@ -64,35 +70,45 @@ class LabelModel(QAbstractItemModel):
         super().__init__(parent)
 
         self.__labelType = labelType
-        self.__items = set()
-        self.selectedImage = None
+        self.__items = {}
+        self.__selectedImage = None
+
+    def setImage(self, image):
+        self.__items = {}
+        self.__selectedImage = image
 
     def columnCount(self, parent = QModelIndex()):
         return 2
 
     def rowCount(self, parent = QModelIndex()):
-        if parent.column() > 0 or not self.selectedImage or not self.__labelType in self.selectedImage.labels:
+        if parent.column() > 0 or not self.__selectedImage or not self.__labelType in self.__selectedImage.labels:
             return 0
 
         if not parent.isValid():
-            return len(self.selectedImage.labels[self.__labelType])
+            return len(self.__selectedImage.labels[self.__labelType])
         elif isinstance(parent.internalPointer(), LabelBase):
             return len(vars(parent.internalPointer()))
         else:
             return 0
 
     def index(self, row, column, parent = QModelIndex()):
-        if not self.hasIndex(row, column, parent) or not self.selectedImage:
+        if not self.hasIndex(row, column, parent) or not self.__selectedImage:
             return QModelIndex()
 
         if not parent.isValid():
-            parentItem = self.selectedImage.labels[self.__labelType]
+            parentItem = self.__selectedImage.labels[self.__labelType]
             return self.createIndex(row, column, parentItem[row])
         else:
             parentItem = parent.internalPointer()
-            p = LabelProperty(list(vars(parentItem).keys())[row], parentItem, parentItem)
-            # TODO TODO TODO This is necessary because p becomes garbage-collected otherwise
-            self.__items.add(p)
+
+            # This is necessary because the label property becomes garbage-collected otherwise.
+            p = None
+            try:
+                p = self.__items[(parentItem, row)]
+            except KeyError:
+                p = LabelProperty(row, parentItem, parentItem)
+                self.__items[(parentItem, row)] = p
+            assert(p)
             return self.createIndex(row, column, p)
 
     def parent(self, index):
@@ -104,7 +120,7 @@ class LabelModel(QAbstractItemModel):
             return QModelIndex()
         else:
             parentItem = childItem.parent()
-            return self.createIndex(self.selectedImage.labels[self.__labelType].index(parentItem), 0, parentItem)
+            return self.createIndex(self.__selectedImage.labels[self.__labelType].index(parentItem), 0, parentItem)
 
     def data(self, index, role = Qt.DisplayRole):
         if not index.isValid():
@@ -114,7 +130,7 @@ class LabelModel(QAbstractItemModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if isinstance(item, LabelBase):
                 return str(index.row()) if index.column() == 0 else QVariant()
-            elif index.column() == 1:
+            elif index.column() == 0:
                 return item.name()
             else:
                 if isinstance(item.property(), Enum):
@@ -133,7 +149,7 @@ class LabelModel(QAbstractItemModel):
         item = index.internalPointer()
         if isinstance(item, LabelBase):
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable
-        elif index.column() == 0:
+        elif index.column() == 1:
             return Qt.ItemIsEditable | Qt.ItemIsEnabled | Qt.ItemIsSelectable
         else:
             return Qt.ItemIsEnabled | Qt.ItemIsSelectable
@@ -142,7 +158,7 @@ class LabelModel(QAbstractItemModel):
         if role != Qt.EditRole:
             return False
         index.internalPointer().setProperty(value)
-        self.labelEdited.emit(self.selectedImage, index.internalPointer().parent())
+        self.labelEdited.emit(self.__selectedImage, index.internalPointer().parent())
         return True
 
 class LabelWidget(QDockWidget):
@@ -199,7 +215,7 @@ class LabelWidget(QDockWidget):
             model.beginResetModel()
         self.__selectedImage = None
         for model in self.__treeModels:
-            model.selectedImage = None
+            model.setImage(None)
             model.endResetModel()
         self.__treeView.setContextMenuPolicy(Qt.CustomContextMenu if self.__imageDatabase.exists() else Qt.NoContextMenu)
 
@@ -210,7 +226,7 @@ class LabelWidget(QDockWidget):
             model.beginResetModel()
         self.__selectedImage = None
         for model in self.__treeModels:
-            model.selectedImage = None
+            model.setImage(None)
             model.endResetModel()
 
     def selectImage(self, image):
@@ -220,7 +236,7 @@ class LabelWidget(QDockWidget):
             model.beginResetModel()
         self.__selectedImage = image
         for model in self.__treeModels:
-            model.selectedImage = image
+            model.setImage(image)
             model.endResetModel()
 
     def preAddLabel(self, image, label):
