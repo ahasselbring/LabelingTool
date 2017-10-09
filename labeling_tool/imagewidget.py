@@ -14,6 +14,7 @@ class ImageWidget(QWidget):
         self.__selectedImage = None
 
         self.setMouseTracking(True)
+        self.setCursor(Qt.CrossCursor)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
