@@ -1,6 +1,7 @@
 from ast import literal_eval
+from enum import Enum
 from PyQt5.QtCore import pyqtSignal, QAbstractItemModel, QModelIndex, Qt, QVariant
-from PyQt5.QtWidgets import QAction, QDockWidget, QLineEdit, QMenu, QStyledItemDelegate, QTabBar, QTreeView, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QAction, QComboBox, QDockWidget, QLineEdit, QMenu, QStyledItemDelegate, QTabBar, QTreeView, QVBoxLayout, QWidget
 import weakref
 from labeling_tool.labels import *
 
@@ -17,7 +18,7 @@ class LabelProperty:
         return self.__name
 
     def property(self):
-        return str(getattr(self.__ref(), self.__name))
+        return getattr(self.__ref(), self.__name)
 
     def setProperty(self, val):
         setattr(self.__ref(), self.__name, val)
@@ -32,16 +33,29 @@ class LabelDelegate(QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         item = index.internalPointer()
         var = type(item.property())
-        return QLineEdit(parent)
+        if issubclass(var, Enum):
+            return QComboBox(parent)
+        else:
+            return QLineEdit(parent)
 
     def setEditorData(self, editor, index):
         self.blockSignals(True)
-        editor.setText(index.internalPointer().property())
+        item = index.internalPointer()
+        var = type(item.property())
+        if issubclass(var, Enum):
+            editor.addItems(var.__members__.keys())
+            editor.setCurrentIndex(item.property().value)
+        else:
+            editor.setText(str(index.internalPointer().property()))
         self.blockSignals(False)
 
     def setModelData(self, editor, model, index):
-        model.setData(index, editor.text(), Qt.EditRole)
-        pass
+        item = index.internalPointer()
+        var = type(item.property())
+        if issubclass(var, Enum):
+            model.setData(index, var[editor.currentText()], Qt.EditRole)
+        else:
+            model.setData(index, literal_eval(editor.text()), Qt.EditRole)
 
 class LabelModel(QAbstractItemModel):
     labelEdited = pyqtSignal(LabeledImage, LabelBase)
@@ -100,8 +114,13 @@ class LabelModel(QAbstractItemModel):
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if isinstance(item, LabelBase):
                 return str(index.row()) if index.column() == 0 else QVariant()
+            elif index.column() == 1:
+                return item.name()
             else:
-                return item.name() if index.column() == 1 else item.property()
+                if isinstance(item.property(), Enum):
+                    return item.property().name
+                else:
+                    return str(item.property())
 
         return QVariant()
 
@@ -122,7 +141,7 @@ class LabelModel(QAbstractItemModel):
     def setData(self, index, value, role = Qt.EditRole):
         if role != Qt.EditRole:
             return False
-        index.internalPointer().setProperty(literal_eval(value))
+        index.internalPointer().setProperty(value)
         self.labelEdited.emit(self.selectedImage, index.internalPointer().parent())
         return True
 
