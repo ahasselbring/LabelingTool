@@ -40,7 +40,6 @@ class LabelDelegate(QStyledItemDelegate):
         self.blockSignals(False)
 
     def setModelData(self, editor, model, index):
-        print(editor.text())
         model.setData(index, editor.text(), Qt.EditRole)
         pass
 
@@ -220,7 +219,7 @@ class LabelWidget(QDockWidget):
         if image != self.__selectedImage:
             return
         index = self.__treeModels[self.__typeToIndex[type(label)]].index(self.__selectedImage.labels[type(label)].index(label), 0, QModelIndex())
-        self.__treeModels[self.__typeToIndex[type(label)]].dataChanged(index, index)
+        self.__treeModels[self.__typeToIndex[type(label)]].dataChanged.emit(index, index)
 
     def preRemoveLabel(self, image, label):
         if image != self.__selectedImage:
